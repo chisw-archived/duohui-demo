@@ -1,0 +1,408 @@
+<!DOCTYPE html>
+<html>
+<head>
+<title>活动报名</title>
+<meta http-equiv="content-type" content="text/html;charset=utf-8" />
+    <meta http-equiv="content-type" content="text/html;charset=utf-8" />
+    <meta name="viewport" content="width=device-width,initial-scale=1.0,user-scalable=0">
+    <link rel="stylesheet" href="https://unpkg.com/element-ui/lib/theme-chalk/index.css">
+<style>
+
+* {
+    margin: 0;
+    padding: 0;
+    outline: none;
+}
+
+html, body {
+    background-color: #F2F2F2;
+}
+
+#duohui {
+    min-width: 320px;
+    padding-bottom: 4.75rem;
+}
+
+/* 各模块面板 */
+.duohui-panel {
+    width: 100%;
+}
+
+.duohui-panel .panel-header {
+    padding: .46rem;
+}
+
+.duohui-panel .panel-header .header-text {
+    font-size: .8rem;
+    color: #666;
+}
+
+.duohui-panel .panel-main {
+    box-sizing: border-box;
+    width: 100%;
+    background-color: #fff;
+}
+
+.duohui-panel .panel-main.-form {
+    padding: 1rem;
+}
+
+
+/* 票种列表 */
+.ticket-list {
+    width: 100%;
+}
+
+.ticket-list .list-item {
+    box-sizing: border-box;
+    margin-left: 1rem;
+    height: 5.25rem;
+    padding: .8rem 1rem .8rem 0;
+}
+
+.ticket-list .list-item + .list-item {
+    border-top: 1px solid #DEDEDE;
+}
+
+.ticket-list .list-item .item-info,
+.ticket-list .list-item .item-spinner {
+    width: 50%;
+    float: left;
+}
+
+.ticket-list .list-item .item-info .info-title {
+    font-size: 1rem;
+}
+
+.ticket-list .list-item .item-info .info-desc {
+    margin: .3rem 0 0 0;
+    width: 100%;
+    font-size: .4rem;
+    color: #999;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.ticket-list .list-item .item-info .info-price {
+    font-size: .8rem;
+    color: #16B9FF;
+}
+
+.ticket-list .list-item .item-info .info-price .int {
+    font-size: 1.2rem;
+}
+
+.ticket-list .list-item .item-info .info-price .rest-num {
+    margin-left: .6rem;
+    color: #E23B3B;
+}
+
+.ticket-list .list-item .item-spinner {
+    text-align: right;
+}
+
+
+/* 表单 */
+.duohui-form .el-form-item__label {
+    padding: 0;
+    font-size: 1rem;
+    font-weight: bold;
+    color: #000;
+}
+
+
+/* 固定底部 */
+.fixed-bar {
+    box-sizing: border-box;
+    box-shadow: 0 0 5px rgba(0,0,0, .1);
+    position: fixed;
+    right: 0;
+    bottom: 0;
+    left: 0;
+    width: 100%;
+    height: 3.4rem;
+    padding: .4rem 1rem;
+    background: #fff;
+}
+
+.fixed-bar .bar-count {
+    float: left;
+    color: #333;
+}
+
+.fixed-bar .bar-count .count-ticket {
+    font-size: .8rem;
+}
+
+.fixed-bar .bar-count .count-price {
+    font-size: 1rem;
+}
+
+.fixed-bar .bar-count .num {
+    color: #16B9FF;
+}
+
+.fixed-bar .bar-pay-btn {
+    float: right;
+    border-color: #16B9FF;
+    width: 10rem;
+    background: #16B9FF;
+}
+
+
+</style>
+</head>
+<body>
+<div id="duohui">
+
+
+    <!-- 选择票种 -->
+    <div class="duohui-panel">
+
+        <div class="panel-header">
+            <label class="header-text">选择票种</label>
+        </div>
+
+        <div class="panel-main">
+
+            <div class="ticket-list">
+
+                <div v-for="o,i in ticketList" class="list-item">
+                    <div class="item-info">
+                        <h5 class="info-title">{{ o.title }}</h5>
+                        <p class="info-desc">{{ o.desc }}</p>
+                        <p class="info-price">
+                            <span class="int">{{ o.priceInt }}</span>.<span>{{ o.priceFloat }}</span> 元
+                            <span class="rest-num" v-if="o.rest && o.rest > 0">仅剩 {{ o.rest }} 张</span>
+                        </p>
+                    </div>
+                    <div class="item-spinner">
+                        <el-input-number v-model="form.tickets[i].num" :min="0" :max="o.rest || 9999" @change="handlePrice" label="描述文字"></el-input-number>
+                    </div>
+                </div>
+
+            </div>
+
+        </div>
+
+    </div><!-- 选择票种 -->
+
+
+    <!-- 购票人信息 -->
+    <div class="duohui-panel">
+
+        <div class="panel-header">
+            <label class="header-text">购票人信息</label>
+        </div>
+
+        <div class="panel-main -form">
+            <el-form class="duohui-form" :label-position="'top'" size="small" label-width="80px" :model="form">
+                <el-form-item label="手机号">
+                    <el-input v-model="form.phone" placeholder="请输入您的手机号，将用于接收出票短信"></el-input>
+                </el-form-item>
+                <el-form-item label="电子邮箱">
+                    <el-input v-model="form.email" placeholder="请输入您的电子邮箱，将用于接收出票邮件"></el-input>
+                </el-form-item>
+            </el-form>
+        </div>
+
+    </div><!-- 购票人信息 -->
+
+
+    <!-- 参与者信息 -->
+    <div class="duohui-panel" v-for="o,i in form.partner">
+
+        <div class="panel-header">
+            <label class="header-text">参与者信息 （“赞助商”票第 {{ i+1 }} 位）</label>
+        </div>
+
+        <div class="panel-main -form">
+            <el-form class="duohui-form" :label-position="'top'" size="small" label-width="80px" :model="form">
+                <el-form-item label="姓名">
+                    <el-input v-model="form.partner[i].phone" placeholder="请输入真实姓名"></el-input>
+                </el-form-item>
+                <el-form-item label="身份证号">
+                    <el-input v-model="form.partner[i].email" placeholder="由于现场安保需要，请输入身份证号"></el-input>
+                </el-form-item>
+                <el-form-item label="性别">
+                    <el-radio-group v-model="form.partner[i].sex">
+                        <el-radio :label="0">男</el-radio>
+                        <el-radio :label="1">女</el-radio>
+                        <el-radio :label="2">其他</el-radio>
+                        <el-radio :label="3">不愿透露</el-radio>
+                    </el-radio-group>
+                </el-form-item>
+
+            </el-form>
+        </div>
+
+    </div><!-- 参与者信息 -->
+
+
+    <!-- 底部固定 -->
+    <div class="fixed-bar">
+
+        <div class="bar-count">
+            <p class="count-ticket">共 <span class="num">{{ counter.ticket }}</span> 张票</p>
+            <p class="count-price">合计 <span class="num">{{ counter.price.toFixed(2) }}</span> 元</p>
+        </div>
+
+        <el-button class="bar-pay-btn" type="primary" @click="showPostData">立即支付</el-button>
+
+    </div><!-- 底部固定 -->
+
+
+
+</div>
+</body>
+<script src="https://cdn.jsdelivr.net/npm/vue@2.5.22/dist/vue.min.js"></script>
+<script src="https://unpkg.com/element-ui/lib/index.js"></script>
+<script>
+(function(){
+
+    var vm = new Vue({
+
+        el: '#duohui',
+
+        data: {
+            ticketList: [],
+
+            form: {
+                tickets: [],
+                phone: '',
+                email: '',
+                partner: []
+            },
+
+            counter: {
+                ticket: 0,
+                price: 0
+            }
+        },
+
+        created: function() {
+
+            this.getTicketList();
+
+        },
+
+        methods: {
+
+            // 获取票种列表
+            getTicketList() {
+
+                // AJAX DATA
+                const DATA =  [
+                    {
+                        id: '904c7057',
+                        title: '远程支持票',
+                        desc: '可获得 PPT 等资料',
+                        price: 9.99,
+                        rest: null
+                    },
+                    {
+                        id: 'd5beffd6',
+                        title: '赞助商',
+                        desc: '获得品牌露出机会，详情联系 10086',
+                        price: 9.99,
+                        rest: 2,
+                        isPartnerNeed: true
+                    },
+                    {
+                        id: 'a95138e8',
+                        title: '标准票',
+                        desc: '可获得活动现场参加活动的机会',
+                        price: 0.99,
+                        rest: null
+                    }
+                ];
+
+                // 整、浮大小写分开
+                this.ticketList = DATA.map( data => {
+                    let str       = ( data.price || 0 ).toFixed(2).toString(),
+                        pricePair = str.split('.');
+
+                    data.priceInt   = pricePair[0];
+                    data.priceFloat = pricePair[1];
+
+                    return data;
+                });
+
+                // 提交的数据中添加前端计数器个数
+                this.form.tickets = DATA.map( data => {
+                   return Object.assign(data, {num: 0});
+                });
+
+            },  // getTicketList
+
+
+            // 处理价格统计
+            handlePrice() {
+
+                let countTicket = 0,
+                    countPrice  = 0;
+
+                this.form.tickets.forEach( data => {
+
+                    // 统计票数、价格
+                    countTicket += data.num;
+                    countPrice += data.price * 100 * data.num;
+
+                    // 增、删参与者表单
+                    if ( data.isPartnerNeed ) {
+
+                        let len = this.form.partner.length;
+
+                        if ( data.num > len ) {
+                            this.form.partner.push({
+                                phone: '',
+                                email: '',
+                                sex: 0
+                            })
+                        } else if ( data.num < len ) {
+                            this.form.partner.pop();
+                        }
+                    }
+                });
+
+                this.counter.ticket = countTicket;
+                this.counter.price  = countPrice / 100;
+
+            },  // handlePrice
+
+
+            // 展示 POST 数据
+            showPostData() {
+
+                let POST_DATA = Object.assign( {}, this.form);
+
+                // 过滤多余字段
+                POST_DATA.tickets = POST_DATA.tickets.map( data => {
+                   return {
+                       id: data.id,
+                       num: data.num
+                   }
+                });
+
+                // 去除票数为 0 的
+                POST_DATA.tickets = POST_DATA.tickets.filter( data => {
+                   return data.num > 0;
+                });
+
+                if ( !POST_DATA.partner.length ) delete POST_DATA.partner;
+
+                this.$alert( '【可在控制台查看 POST 数据】' + JSON.stringify(POST_DATA) );
+                console.log( JSON.stringify(POST_DATA) );
+
+            },  // showPostData
+
+        },
+
+    });
+
+    window.ji = vm;  // TODO: DELETE TEST CODE
+
+}());
+</script>
+</html>
